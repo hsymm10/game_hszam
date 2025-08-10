@@ -293,6 +293,28 @@
       0%, 100% { opacity: 0; transform: scale(0.5); }
       50% { opacity: var(--opacity); transform: scale(1); }
     }
+    
+    /* Message display */
+    .message-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px 25px;
+      border-radius: 10px;
+      font-size: 1rem;
+      color: white;
+      text-shadow: 2px 2px 0 #000;
+      border: 2px solid var(--obstacle);
+      box-shadow: 0 0 15px rgba(231, 76, 60, 0.7);
+      max-width: 80%;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+      z-index: 50;
+    }
   </style>
 </head>
 <body>
@@ -345,6 +367,7 @@
     </div>
     
     <div class="score-display">SCORE: <span id="scoreDisplay">0</span></div>
+    <div class="message-display" id="messageDisplay"></div>
     <div class="stars" id="stars"></div>
   </div>
   
@@ -367,7 +390,42 @@
     const finalScore = document.getElementById("finalScore");
     const finalHighScore = document.getElementById("finalHighScore");
     const starsContainer = document.getElementById("stars");
+    const messageDisplay = document.getElementById("messageDisplay");
     const characterOptions = document.querySelectorAll(".character-option");
+
+    // Social issue messages
+    const socialMessages = [
+      "Kemiskinan",
+      "Putus sekolah",
+      "Pendidikan rendah",
+      "Tekanan orang tua",
+      "Tradisi pernikahan muda",
+      "Kehamilan di luar nikah",
+      "Kurangnya pengawasan orang tua",
+      "Pergaulan bebas",
+      "Pacaran terlalu bebas",
+      "Tekanan dari pasangan",
+      "Perjodohan",
+      "Pemahaman agama yang keliru",
+      "Ikut-ikutan teman",
+      "Tidak ada pekerjaan",
+      "Perdagangan anak",
+      "Orang tua merantau",
+      "Perceraian orang tua",
+      "Kekerasan dalam rumah",
+      "Tidak paham kesehatan reproduksi",
+      "Stigma perawan tua",
+      "Orang tua ingin cepat cucu",
+      "Dampak media sosial negatif",
+      "Hubungan seks bebas",
+      "Krisis keluarga",
+      "Menutupi kasus hukum",
+      "Nafsu sesaat",
+      "Pemahaman cinta yang dangkal",
+      "Tidak ada edukasi seks",
+      "Lingkungan buruk",
+      "Lemahnya penegakan hukum"
+    ];
 
     // Create starry background
     function createStars() {
@@ -398,6 +456,8 @@
     let clouds = [];
     let particles = [];
     let isDoubleJumpAvailable = false;
+    let obstaclesPassed = 0;
+    let messageTimeout = null;
     
     // Character selection
     let selectedCharacter = "default";
@@ -562,7 +622,8 @@
         width: type.width,
         height: type.height,
         color: type.color,
-        glow: 0
+        glow: 0,
+        passed: false
       });
     }
 
@@ -699,6 +760,17 @@
       for (let i = 0; i < obstacles.length; i++) {
         obstacles[i].x -= gameSpeed;
 
+        // Check if player passed the obstacle
+        if (!obstacles[i].passed && player.x > obstacles[i].x + obstacles[i].width) {
+          obstacles[i].passed = true;
+          obstaclesPassed++;
+          
+          // Show message every 3 obstacles passed
+          if (obstaclesPassed % 3 === 0) {
+            showRandomMessage();
+          }
+        }
+
         // Collision detection
         if (player.x < obstacles[i].x + obstacles[i].width &&
             player.x + player.width > obstacles[i].x &&
@@ -710,6 +782,20 @@
         }
       }
       obstacles = obstacles.filter(o => o.x + o.width > 0);
+    }
+
+    function showRandomMessage() {
+      if (messageTimeout) {
+        clearTimeout(messageTimeout);
+      }
+      
+      const randomMessage = socialMessages[Math.floor(Math.random() * socialMessages.length)];
+      messageDisplay.textContent = randomMessage;
+      messageDisplay.style.opacity = 1;
+      
+      messageTimeout = setTimeout(() => {
+        messageDisplay.style.opacity = 0;
+      }, 3000);
     }
 
     function drawCoins() {
@@ -988,6 +1074,7 @@
       coins = [];
       bonuses = [];
       particles = [];
+      obstaclesPassed = 0;
       player.y = 300;
       player.dy = 0;
       isDoubleJumpAvailable = false;
@@ -995,6 +1082,7 @@
       startScreen.style.display = "none";
       characterSelectScreen.style.display = "none";
       scoreDisplay.textContent = score;
+      messageDisplay.style.opacity = 0;
       requestAnimationFrame(gameLoop);
     }
 
